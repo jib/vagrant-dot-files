@@ -1,0 +1,2 @@
+#!/bin/sh
+sudo puppet apply --verbose --debug --modulepath="/home/host_home/sources/git/puppet-manifests/env/development/krux-modules:/home/host_home/sources/git/puppet-manifests/env/development/modules:/home/host_home/sources/git/puppet-manifests/env/development/services" --node_terminus=exec --external_nodes="/usr/bin/perl /usr/local/krux/components/kvagrant/bin/enc.pl /vagrant/.enc/vagrant-krux" /home/host_home/sources/git/puppet-manifests/env/development/manifests/vagrant.pp $@
