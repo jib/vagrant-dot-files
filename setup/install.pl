@@ -50,42 +50,26 @@ Working on home dir: $dir
     }
 }
 
-### remove crappy bash profile
-{   my $file = "$dir/.bash_profile";
-
-    ### if it's already gone, don't worry about it
-    next unless -e $file and !$force;
-
-    print "$file prevents .bash_rc from being executed. Remove it?\n";
-
-    my $bool = do {
-        local $Term::UI::AUTOREPLY = $auto;
-        $term->ask_yn( prompt => "Unlink $file?", default => $yes );
-    };
-
-    if( $bool ) {
-        print "Unlinking $file\n\n\n";
-        unlink $file;
-    }
-}
-
 ### load bash options
-{   my $file    = "$dir/.bashrc";
+BASH_RC: {   
+    my $file    = "$dir/.bashrc";
     my $rc      = "$target/dot.bashrc";
 
     ### tripple escape $PATH, so the system echo doesn't expand it.
-    my $snippet = qq[
+    my $snippet = qq(
 ### Include custom options
 if [ -f $rc ]; then
     . $rc
 fi
 
-PATH=\\\$PATH:$target/bin
+PATH=\\\$PATH:$target/bin:$target/.bin
 
-];
+);
 
     ### already included?
-    next if not system( qq[grep -q $rc $file] ) and not $force;
+    if( -e $file ) { 
+        last BASH_RC if not system( qq[grep -q $rc $file] ) and not $force;
+    }
 
     my $bool = do {
         local $Term::UI::AUTOREPLY = $auto;
@@ -95,6 +79,23 @@ PATH=\\\$PATH:$target/bin
     if( $bool ) {
         system( qq[ echo "$snippet" >> $file ] ) and die $?;
     }
+}
+
+### remove crappy bash profile
+BASH_PROFILE: {
+    my $file = "$dir/.bash_profile";
+    my $rc   = "$dir/.bashrc";
+
+    ### already a link, move on
+    unless( -l $file ) {
+        system( qq[ln -s $rc $file] ) and die $?;
+    }
+}
+
+PACKAGES: {
+    my @packages = qw[vim];
+
+    system( qq[sudo apt-get install ] . join(' ', @packages ) ) and die $?;
 }
 
 sub usage {
